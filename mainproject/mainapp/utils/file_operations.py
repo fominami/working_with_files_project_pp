@@ -21,7 +21,6 @@ class TextFileReader:
             with open(self.file_path, 'r', encoding=self.encoding) as f:
                 content = f.read()
         except UnicodeDecodeError:
-            # Попробуйте другую кодировку, например 'windows-1251' для русских текстов
             with open(self.file_path, 'r', encoding='windows-1251') as f:
                 content = f.read()
         return content
