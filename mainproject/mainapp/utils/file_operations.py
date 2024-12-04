@@ -1,9 +1,8 @@
-
-
 import json
 import yaml
 import xml.etree.ElementTree as ET
 from abc import ABC, abstractmethod
+from .data_processing import DataProcessor
 
 class FileReader(ABC):
     @abstractmethod
@@ -67,10 +66,14 @@ class FileReaderDecorator(FileReader):
     def __init__(self, file_reader):
         self._file_reader = file_reader
 
-    def read(self):
-        result = self._file_reader.read()
-        self._log_reading()
-        return result
+    def read(self): 
+        content = self._file_reader.read() 
+        processed_content = self._process_data(content) 
+        self._log_reading() 
+        return processed_content 
+    def _process_data(self, content): 
+         processor = DataProcessor(content) 
+         return processor.process_with_library()
 
     def _log_reading(self):
         print(f"File {self._file_reader.file_path} was read successfully.")
