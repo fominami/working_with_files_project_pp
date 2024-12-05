@@ -73,7 +73,7 @@ class FileReaderDecorator(FileReader):
         return processed_content 
     def _process_data(self, content): 
          processor = DataProcessor(content) 
-         return processor.process_with_library()
+         return processor.process_without_regex()
 
     def _log_reading(self):
         print(f"File {self._file_reader.file_path} was read successfully.")
