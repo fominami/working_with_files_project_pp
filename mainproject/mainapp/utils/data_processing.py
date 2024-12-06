@@ -4,7 +4,7 @@ import re
 class DataProcessor:
     def __init__(self, data):
         self.data = data
-
+#Обработка с библиотекой
     def process_text_library(self):
         processed_data = []
         expression = ''
@@ -25,13 +25,13 @@ class DataProcessor:
                         result = sympify(expression)
                         processed_data.append(str(result))
                     except SympifyError:
-                        processed_data.append(expression)  # Возвращаем исходное выражение при ошибке
+                        processed_data.append(expression)  
                     expression = ''
                     inside_expression = False
                 processed_data.append(char)
             i += 1
 
-        # Обработка оставшегося выражения, если оно есть
+        
         if inside_expression and expression:
             try:
                 result = sympify(expression)
@@ -63,13 +63,13 @@ class DataProcessor:
                         result = self.evaluate_expression(expression)
                         processed_data.append(str(result))
                     except Exception as e:
-                        processed_data.append(expression)  # Возвращаем исходное выражение при ошибке
+                        processed_data.append(expression) 
                     expression = ''
                     inside_expression = False
                 processed_data.append(char)
             i += 1
 
-        # Обработка оставшегося выражения, если оно есть
+        
         if inside_expression and expression:
             try:
                 result = self.evaluate_expression(expression)
@@ -155,5 +155,30 @@ class DataProcessor:
             if b == 0:
                 raise ValueError("Деление на ноль.")
             return a / b
+        
+
+    #Обработка с использованием регулярного выражения
+    def process_text_with_regex(self):
+        pattern = re.compile(r'\([^()]+\)')
+        while re.search(pattern, self.data):
+            self.data = re.sub(pattern, self.replace_expression, self.data)
+        final_pattern = re.compile(r'\d+(\.\d+)?(?:[\+\-\*/]\d+(\.\d+)?)*')
+        self.data = re.sub(final_pattern, self.replace_expression, self.data)
+
+        return self.data
+
+    def replace_expression(self, match):
+        expression = match.group(0)
+        try:
+            result = sympify(expression)
+            return str(result)
+        except SympifyError:
+            print(f"Не удалось обработать выражение: {expression}")
+            return expression
+
+
+
+
+
 
 
