@@ -60,7 +60,7 @@ class XMLFileReader(FileReader):
     def read(self):
         tree = ET.parse(self.file_path)
         root = tree.getroot()
-        return root
+        return ET.tostring(root, encoding='unicode')
 
 class FileReaderDecorator(FileReader):
     def __init__(self, file_reader):
