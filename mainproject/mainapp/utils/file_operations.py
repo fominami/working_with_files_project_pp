@@ -8,6 +8,9 @@ class FileReader(ABC):
     @abstractmethod
     def read(self):
         pass
+    @abstractmethod 
+    def write(self, content, output_file): 
+        pass
 
 
 class TextFileReader:
@@ -23,6 +26,9 @@ class TextFileReader:
             with open(self.file_path, 'r', encoding='windows-1251') as f:
                 content = f.read()
         return content
+    def write(self, content, output_file):
+        with open(output_file, 'w', encoding=self.encoding) as f: 
+            f.write(content)
 
 
 
@@ -37,7 +43,9 @@ class JSONFileReader:
                 raise ValueError("Файл пустой")
             json_content = json.loads(content)
         return json.dumps(json_content, indent=4)
-
+    def write(self, content, output_file): 
+        with open(output_file, 'w') as f: 
+            json.dump(json.loads(content), f, indent=4)
 
 
 class YAMLFileReader:
@@ -51,6 +59,9 @@ class YAMLFileReader:
             except yaml.YAMLError as e:
                 raise ValueError(f"Error reading YAML file: {e}")
         return yaml.dump(content, default_flow_style=False)
+    def write(self, content, output_file): 
+        with open(output_file, 'w') as f: 
+            yaml.dump(yaml.safe_load(content), f, default_flow_style=False)
 
 
 class XMLFileReader(FileReader):
@@ -61,6 +72,9 @@ class XMLFileReader(FileReader):
         tree = ET.parse(self.file_path)
         root = tree.getroot()
         return ET.tostring(root, encoding='unicode')
+    def write(self, content, output_file): 
+        root = ET.ElementTree(ET.fromstring(content)) 
+        root.write(output_file, encoding='unicode')
 
 class FileReaderDecorator(FileReader):
     def __init__(self, file_reader):
@@ -71,9 +85,14 @@ class FileReaderDecorator(FileReader):
         processed_content = self._process_data(content) 
         self._log_reading() 
         return processed_content 
+    def write(self, content, output_file):
+         self._file_reader.write(content, output_file) 
+         self._log_writing(output_file)
     def _process_data(self, content): 
          processor = DataProcessor(content) 
          return processor.process_text_without_regex()
 
     def _log_reading(self):
         print(f"File {self._file_reader.file_path} was read successfully.")
+    def _log_writing(self, output_file): 
+        print(f"File {output_file} was written successfully.")
