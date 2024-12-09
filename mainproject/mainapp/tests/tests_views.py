@@ -1,5 +1,8 @@
 from django.test import SimpleTestCase, Client
 from django.urls import reverse
+from unittest import mock
+from unittest.mock import patch, mock_open
+from django.http import HttpResponse
 from django.core.files.uploadedfile import SimpleUploadedFile
 from ..forms import FileUploadForm
 import os
@@ -62,4 +65,31 @@ class FileUploadViewTest(SimpleTestCase):
         
         self.assertEqual(response.status_code, 400)
         self.assertIn(b"Unsupported file type.", response.content)
+    
+    @patch('mainapp.views.tempfile.gettempdir', return_value='/mock')
+    @patch('mainapp.views.os.path.exists', return_value=True)
+    @patch('mainapp.views.os.path.join', return_value='/mock/outputfile.txt')
+    @patch('mainapp.views.os.remove')
+    @patch('mainapp.views.tempfile.NamedTemporaryFile')
+    @patch('builtins.open', new_callable=mock_open, read_data='processed content')
+    @patch('mainapp.utils.file_operations.FileReaderDecorator.read', return_value='processed content')
+    def test_file_upload_and_download(self, mock_read, mock_open_file, mock_tempfile, mock_remove, mock_path_join, mock_path_exists, mock_gettempdir):
+        mock_tempfile.return_value.__enter__.return_value.name = '/mock/tempfile'
+        
+        mock_file = mock.Mock()
+        mock_file.name = 'test.txt'
+        mock_file.chunks.return_value = [b'file content']
+    
+        url = reverse('file_upload')
+        response = self.client.post(url, {'file': mock_file, 'output_file': 'outputfile'}, format='multipart')
+
+       
+        self.assertEqual(response.status_code, 200)
+        self.assertIsInstance(response, HttpResponse)
+        self.assertEqual(response['Content-Disposition'], 'attachment; filename="outputfile.txt"')
+        self.assertEqual(response.content.decode(), 'processed content')
+
+        mock_remove.assert_any_call('/mock/tempfile')
+        mock_remove.assert_any_call('/mock/outputfile.txt')
+
 

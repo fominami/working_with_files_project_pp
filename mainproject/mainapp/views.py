@@ -21,7 +21,7 @@ class FileUploadView(View):
             uploaded_file = request.FILES['file']
             file_type = uploaded_file.name.split('.')[-1]
             output_file_name = request.POST.get('output_file', 'output')
-
+            output_file_path = None
             
             with tempfile.NamedTemporaryFile(delete=False) as tmp_file:
                 for chunk in uploaded_file.chunks():
@@ -51,7 +51,7 @@ class FileUploadView(View):
 
             finally:
                 os.remove(tmp_file_path)
-                if os.path.exists(output_file_path): 
+                if output_file_path and os.path.exists(output_file_path): 
                     os.remove(output_file_path)
 
         return render(request, self.template_name, {'form': form})
