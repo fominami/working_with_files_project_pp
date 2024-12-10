@@ -3,6 +3,9 @@ import yaml
 import xml.etree.ElementTree as ET
 from abc import ABC, abstractmethod
 from .data_processing import DataProcessor
+import tempfile
+import zipfile 
+import os
 
 class FileReader(ABC):
     @abstractmethod
@@ -80,8 +83,11 @@ class FileReaderDecorator(FileReader):
     def __init__(self, file_reader):
         self._file_reader = file_reader
 
+    def set_file_path(self, file_path):
+        self.file_path = file_path
     def read(self): 
-        content = self._file_reader.read() 
+       
+        content = self._file_reader.read()
         processed_content = self._process_data(content) 
         self._log_reading() 
         return processed_content 
@@ -91,7 +97,11 @@ class FileReaderDecorator(FileReader):
     def _process_data(self, content): 
          processor = DataProcessor(content) 
          return processor.process_text_without_regex()
-
+    def extract_zip(self,zip_file_path, extract_to):
+         with zipfile.ZipFile(zip_file_path, 'r') as zip_ref: 
+             zip_ref.extractall(extract_to)
+             extracted_files = zip_ref.namelist() 
+         return os.path.join(extract_to, extracted_files[0])
     def _log_reading(self):
         print(f"File {self._file_reader.file_path} was read successfully.")
     def _log_writing(self, output_file): 

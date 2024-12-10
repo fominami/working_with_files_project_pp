@@ -6,6 +6,7 @@ from django.http import HttpResponse
 from .forms import FileUploadForm
 from .utils.file_operations import TextFileReader, JSONFileReader, YAMLFileReader, XMLFileReader, FileReaderDecorator
 import tempfile
+import zipfile
 import os
 
 class FileUploadView(View):
@@ -29,17 +30,26 @@ class FileUploadView(View):
                 tmp_file_path = tmp_file.name
 
             try:
-                if file_type == 'txt':
-                    reader = TextFileReader(tmp_file_path)
-                elif file_type == 'json':
-                    reader = JSONFileReader(tmp_file_path)
-                elif file_type == 'yaml':
-                    reader = YAMLFileReader(tmp_file_path)
-                elif file_type == 'xml':
-                    reader = XMLFileReader(tmp_file_path)
-                else:
+                reader = FileReaderDecorator(None) 
+                reader.set_file_path(tmp_file_path)
+                if zipfile.is_zipfile(tmp_file_path): 
+                     extract_to = tempfile.mkdtemp() 
+                     extracted_file_path = reader.extract_zip(tmp_file_path, extract_to) 
+                     file_type = extracted_file_path.split('.')[-1] 
+                     tmp_file_path = extracted_file_path 
+                if file_type == 'txt': 
+                    reader = TextFileReader(tmp_file_path) 
+                elif file_type == 'json': 
+                    reader = JSONFileReader(tmp_file_path) 
+                elif file_type == 'yaml': 
+                    reader = YAMLFileReader(tmp_file_path) 
+                elif file_type == 'xml': 
+                    reader = XMLFileReader(tmp_file_path) 
+                else: 
                     return HttpResponse("Unsupported file type.", status=400)
+                       
 
+                   
                 decorated_reader = FileReaderDecorator(reader)
                 content = decorated_reader.read()
                 output_file_path = os.path.join(tempfile.gettempdir(), f"{output_file_name}.{file_type}") 
