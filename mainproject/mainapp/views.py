@@ -5,6 +5,7 @@ from django.shortcuts import render
 from django.http import HttpResponse
 from .forms import FileUploadForm
 from .utils.file_operations import TextFileReader, JSONFileReader, YAMLFileReader, XMLFileReader, FileReaderDecorator
+
 import tempfile
 import zipfile
 import os
@@ -22,6 +23,7 @@ class FileUploadView(View):
             uploaded_file = request.FILES['file']
             file_type = uploaded_file.name.split('.')[-1]
             output_file_name = request.POST.get('output_file', 'output')
+            archive = request.POST.get('archive')
             output_file_path = None
             
             with tempfile.NamedTemporaryFile(delete=False) as tmp_file:
@@ -52,11 +54,19 @@ class FileUploadView(View):
                    
                 decorated_reader = FileReaderDecorator(reader)
                 content = decorated_reader.read()
-                output_file_path = os.path.join(tempfile.gettempdir(), f"{output_file_name}.{file_type}") 
+                
+                output_file_path = os.path.join(tempfile.gettempdir(), f"{output_file_name}.{file_type}")
                 decorated_reader.write(content, output_file_path) 
+                if archive: 
+                    output_file_path = os.path.join(tempfile.gettempdir(), f"{output_file_name}.{file_type}")
+                    zip_output_file_path = os.path.join(tempfile.gettempdir(), f"{output_file_name}.zip") 
+                    with zipfile.ZipFile(zip_output_file_path, 'w') as zipf: 
+                        zipf.write(output_file_path, arcname=f"{output_file_name}.{file_type}") 
+                    output_file_path = zip_output_file_path
                 with open(output_file_path, 'rb') as f: 
                     response = HttpResponse(f.read(), content_type='application/octet-stream') 
-                    response['Content-Disposition'] = f'attachment; filename="{output_file_name}.{file_type}"'
+                    filename = f"{output_file_name}.zip" if archive else f"{output_file_name}.{file_type}"
+                    response['Content-Disposition'] = f'attachment; filename="{filename}"'
                     return response
 
             finally:
