@@ -8,6 +8,7 @@ from .utils.file_operations import TextFileReader, JSONFileReader, YAMLFileReade
 
 import tempfile
 import zipfile
+import rarfile
 import os
 
 class FileUploadView(View):
@@ -39,6 +40,11 @@ class FileUploadView(View):
                      extracted_file_path = reader.extract_zip(tmp_file_path, extract_to) 
                      file_type = extracted_file_path.split('.')[-1] 
                      tmp_file_path = extracted_file_path 
+                elif rarfile.is_rarfile(tmp_file_path): 
+                    extract_to = tempfile.mkdtemp() 
+                    extracted_file_path = reader.extract_rar(tmp_file_path, extract_to) 
+                    file_type = extracted_file_path.split('.')[-1] 
+                    tmp_file_path =extracted_file_path
                 if file_type == 'txt': 
                     reader = TextFileReader(tmp_file_path) 
                 elif file_type == 'json': 

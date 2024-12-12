@@ -5,6 +5,7 @@ from abc import ABC, abstractmethod
 from .data_processing import DataProcessor
 import tempfile
 import zipfile 
+import rarfile
 import os
 
 class FileReader(ABC):
@@ -102,6 +103,13 @@ class FileReaderDecorator(FileReader):
              zip_ref.extractall(extract_to)
              extracted_files = zip_ref.namelist() 
          return os.path.join(extract_to, extracted_files[0])
+    def extract_rar(self, rar_file_path, extract_to): 
+        with rarfile.RarFile(rar_file_path) as rar: 
+            rar.extractall(path=extract_to)
+            extracted_files = rar.namelist() 
+            if len(extracted_files) != 1: 
+                raise ValueError("Archive contains more than one file.") 
+            return os.path.join(extract_to, extracted_files[0])
     def _log_reading(self):
         print(f"File {self._file_reader.file_path} was read successfully.")
     def _log_writing(self, output_file): 
