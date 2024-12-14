@@ -72,15 +72,19 @@ class FileUploadView(View):
                         zipf.write(output_file_path, arcname=f"{output_file_name}.{file_type}") 
                     output_file_path = zip_output_file_path
                 if rararchive: 
-                    rar_exe_path = r'"C:\Program Files\WinRAR\Rar.exe"' 
+                    rar_exe_path = r'C:\Program Files\WinRAR\Rar.exe'
                     rar_output_file_path = os.path.join(tempfile.gettempdir(), f"{output_file_name}.rar") 
-                    if not os.path.isfile(output_file_path): 
-                        raise FileNotFoundError(f"The file {output_file_path} does not exist.")
-                    subprocess.run([rar_exe_path, 'a', rar_output_file_path, output_file_path], check=True, capture_output=True, text=True)
+                    if not os.path.isfile(output_file_path):
+                        raise FileNotFoundError(f"The file {output_file_path} does not exist.") 
+                    result = subprocess.run([rar_exe_path, 'a', rar_output_file_path, output_file_path], check=True, capture_output=True) 
+                    if result.returncode != 0: 
+                        raise RuntimeError(f"Failed to create RAR archive: {result.stderr.decode()}") 
                     output_file_path =rar_output_file_path
+                
                 with open(output_file_path, 'rb') as f: 
                     response = HttpResponse(f.read(), content_type='application/octet-stream') 
                     filename = f"{output_file_name}.zip" if archive else f"{output_file_name}.{file_type}"
+                    filename = f"{output_file_name}.rar" if rararchive else f"{output_file_name}.{file_type}"
                     response['Content-Disposition'] = f'attachment; filename="{filename}"'
                     return response
 
