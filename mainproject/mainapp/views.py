@@ -1,5 +1,6 @@
 
 
+import subprocess
 from django.views import View
 from django.shortcuts import render
 from django.http import HttpResponse
@@ -25,6 +26,7 @@ class FileUploadView(View):
             file_type = uploaded_file.name.split('.')[-1]
             output_file_name = request.POST.get('output_file', 'output')
             archive = request.POST.get('archive')
+            rararchive = request.POST.get('rararchive')
             output_file_path = None
             
             with tempfile.NamedTemporaryFile(delete=False) as tmp_file:
@@ -69,6 +71,13 @@ class FileUploadView(View):
                     with zipfile.ZipFile(zip_output_file_path, 'w') as zipf: 
                         zipf.write(output_file_path, arcname=f"{output_file_name}.{file_type}") 
                     output_file_path = zip_output_file_path
+                if rararchive: 
+                    rar_exe_path = r'"C:\Program Files\WinRAR\Rar.exe"' 
+                    rar_output_file_path = os.path.join(tempfile.gettempdir(), f"{output_file_name}.rar") 
+                    if not os.path.isfile(output_file_path): 
+                        raise FileNotFoundError(f"The file {output_file_path} does not exist.")
+                    subprocess.run([rar_exe_path, 'a', rar_output_file_path, output_file_path], check=True, capture_output=True, text=True)
+                    output_file_path =rar_output_file_path
                 with open(output_file_path, 'rb') as f: 
                     response = HttpResponse(f.read(), content_type='application/octet-stream') 
                     filename = f"{output_file_name}.zip" if archive else f"{output_file_name}.{file_type}"
