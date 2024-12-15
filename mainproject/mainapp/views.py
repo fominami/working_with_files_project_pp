@@ -5,6 +5,7 @@ from django.views import View
 from django.shortcuts import render
 from django.http import HttpResponse
 from .forms import FileUploadForm
+from .utils.encryption import encrypt_data, decrypt_data, SIGNATURE
 from .utils.file_operations import TextFileReader, JSONFileReader, YAMLFileReader, XMLFileReader, FileReaderDecorator
 
 import tempfile
@@ -27,6 +28,7 @@ class FileUploadView(View):
             output_file_name = request.POST.get('output_file', 'output')
             archive = request.POST.get('archive')
             rararchive = request.POST.get('rararchive')
+            encrypt =request.POST.get('encrypt')
             output_file_path = None
             
             with tempfile.NamedTemporaryFile(delete=False) as tmp_file:
@@ -35,6 +37,14 @@ class FileUploadView(View):
                 tmp_file_path = tmp_file.name
 
             try:
+                with open(tmp_file_path, 'rb') as f: 
+                    file_data = f.read() 
+                if file_data.startswith(SIGNATURE): 
+                    encrypted_data = file_data[len(SIGNATURE):] 
+                    decrypted_data = decrypt_data(encrypted_data)
+                    with open(tmp_file_path, 'wb') as f: 
+                        f.write(decrypted_data) 
+                    print(f"Файл {tmp_file_path} расшифрован.")
                 reader = FileReaderDecorator(None) 
                 reader.set_file_path(tmp_file_path)
                 if zipfile.is_zipfile(tmp_file_path): 
@@ -65,6 +75,14 @@ class FileUploadView(View):
                 
                 output_file_path = os.path.join(tempfile.gettempdir(), f"{output_file_name}.{file_type}")
                 decorated_reader.write(content, output_file_path) 
+
+                if encrypt: 
+                    with open(output_file_path, 'rb') as f: 
+                        file_data = f.read() 
+                    encrypted_data = SIGNATURE + encrypt_data(file_data) 
+                    with open(output_file_path, 'wb') as f: 
+                        f.write(encrypted_data) 
+                        print(f"Файл {output_file_path} зашифрован.")
                 if archive: 
                     output_file_path = os.path.join(tempfile.gettempdir(), f"{output_file_name}.{file_type}")
                     zip_output_file_path = os.path.join(tempfile.gettempdir(), f"{output_file_name}.zip") 
@@ -80,7 +98,13 @@ class FileUploadView(View):
                     if result.returncode != 0: 
                         raise RuntimeError(f"Failed to create RAR archive: {result.stderr.decode()}") 
                     output_file_path =rar_output_file_path
-                
+                '''with open(output_file_path, 'rb') as f: 
+                    file_data = f.read() 
+                if file_data.startswith(SIGNATURE):
+                        encrypted_data = file_data[len(SIGNATURE):] 
+                        decrypted_data = decrypt_data(encrypted_data)
+                        with open(output_file_path, 'wb') as f:
+                            f.write(decrypted_data)'''
                 with open(output_file_path, 'rb') as f: 
                     response = HttpResponse(f.read(), content_type='application/octet-stream') 
                     filename = f"{output_file_name}.zip" if archive else f"{output_file_name}.{file_type}"
