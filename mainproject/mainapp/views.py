@@ -1,5 +1,6 @@
 
 
+
 import subprocess
 from django.views import View
 from django.shortcuts import render
@@ -26,9 +27,7 @@ class FileUploadView(View):
             uploaded_file = request.FILES['file']
             file_type = uploaded_file.name.split('.')[-1]
             output_file_name = request.POST.get('output_file', 'output')
-            archive = request.POST.get('archive')
-            rararchive = request.POST.get('rararchive')
-            encrypt =request.POST.get('encrypt')
+            action = request.POST.get('action')
             output_file_path = None
             
             with tempfile.NamedTemporaryFile(delete=False) as tmp_file:
@@ -76,20 +75,20 @@ class FileUploadView(View):
                 output_file_path = os.path.join(tempfile.gettempdir(), f"{output_file_name}.{file_type}")
                 decorated_reader.write(content, output_file_path) 
 
-                if encrypt: 
+                if action=="encrypt": 
                     with open(output_file_path, 'rb') as f: 
                         file_data = f.read() 
                     encrypted_data = SIGNATURE + encrypt_data(file_data) 
                     with open(output_file_path, 'wb') as f: 
                         f.write(encrypted_data) 
                         print(f"Файл {output_file_path} зашифрован.")
-                if archive: 
+                if action=="archive": 
                     output_file_path = os.path.join(tempfile.gettempdir(), f"{output_file_name}.{file_type}")
                     zip_output_file_path = os.path.join(tempfile.gettempdir(), f"{output_file_name}.zip") 
                     with zipfile.ZipFile(zip_output_file_path, 'w') as zipf: 
                         zipf.write(output_file_path, arcname=f"{output_file_name}.{file_type}") 
                     output_file_path = zip_output_file_path
-                if rararchive: 
+                if action=="rararchive": 
                     rar_exe_path = r'C:\Program Files\WinRAR\Rar.exe'
                     rar_output_file_path = os.path.join(tempfile.gettempdir(), f"{output_file_name}.rar") 
                     if not os.path.isfile(output_file_path):
@@ -98,17 +97,15 @@ class FileUploadView(View):
                     if result.returncode != 0: 
                         raise RuntimeError(f"Failed to create RAR archive: {result.stderr.decode()}") 
                     output_file_path =rar_output_file_path
-                '''with open(output_file_path, 'rb') as f: 
-                    file_data = f.read() 
-                if file_data.startswith(SIGNATURE):
-                        encrypted_data = file_data[len(SIGNATURE):] 
-                        decrypted_data = decrypt_data(encrypted_data)
-                        with open(output_file_path, 'wb') as f:
-                            f.write(decrypted_data)'''
+               
                 with open(output_file_path, 'rb') as f: 
                     response = HttpResponse(f.read(), content_type='application/octet-stream') 
-                    filename = f"{output_file_name}.zip" if archive else f"{output_file_name}.{file_type}"
-                    filename = f"{output_file_name}.rar" if rararchive else f"{output_file_name}.{file_type}"
+                    if action=="archive":
+                        filename = f"{output_file_name}.zip" 
+                    elif action=="rararchive":
+                        filename = f"{output_file_name}.rar" 
+                    else:
+                        filename =f"{output_file_name}.{file_type}"
                     response['Content-Disposition'] = f'attachment; filename="{filename}"'
                     return response
 

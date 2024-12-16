@@ -10,26 +10,58 @@
             margin: 0;
             padding: 20px;
             background-color: #f4f4f4;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background: linear-gradient(135deg, #f9f9f9, #e3e3e3);
         }
         h1 {
-            color: #333;
+            color: #f8a3da;
+            margin-bottom: 20px;
         }
         form {
-            background: #fff;
-            padding: 20px;
-            border-radius: 5px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            background: #ffffff;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+            max-width: 400px;
+            width: 100%;
         }
         button {
-            background-color: #007bff;
+            background-color: #f8a3da;
             color: #fff;
-            padding: 10px 15px;
+            padding: 10px 20px;
             border: none;
             border-radius: 5px;
             cursor: pointer;
+            width: 100%;
+            font-size: 16px;
         }
         button:hover {
-            background-color: #0056b3;
+            background-color: #ff57c4;
+        }
+        .radio-buttons {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 15px;
+        }
+        .radio-buttons label {
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        .radio-buttons input {
+            margin-right: 10px;
+            accent-color: #ff57c4;
+        }
+        input[type="text"] {
+            width: calc(100% - 20px);
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 14px;
         }
     </style>
 </head>
@@ -38,12 +70,20 @@
     <form method="post" enctype="multipart/form-data">
         <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
         {{ form.as_p }}
-        <label for="archive">Архивировать файл zip:</label>
-        <input type="checkbox" id="archive" name="archive">
-        <label for="rararchive">Архиваровать файл rar:</label>
-        <input type="checkbox" id="rararchive" name="rararchive">
-        <label for="rararchive">Зашифровать:</label>
-        <input type="checkbox" id="encrypt" name="encrypt">
+        <div class="radio-buttons">
+            <label for="archive">
+                <input type="radio" id="archive" name="action" value="archive">
+                Архивировать файл zip:
+            </label>
+            <label for="rararchive">
+                <input type="radio" id="rararchive" name="action" value="rararchive">
+                Архивировать файл rar:
+            </label>
+            <label for="encrypt">
+                <input type="radio" id="encrypt" name="action" value="encrypt">
+                Зашифровать:
+            </label>
+        </div>
         <label for="output_file">Output File Name:</label>
         <input type="text" id="output_file" name="output_file" required>
         <button type="submit">Upload</button>
