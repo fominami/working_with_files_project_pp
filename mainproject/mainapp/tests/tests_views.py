@@ -71,9 +71,10 @@ class FileUploadViewTest(SimpleTestCase):
     @patch('mainapp.views.os.path.join', return_value='/mock/outputfile.txt')
     @patch('mainapp.views.os.remove')
     @patch('mainapp.views.tempfile.NamedTemporaryFile')
-    @patch('builtins.open', new_callable=mock_open, read_data='processed content')
+    @patch('builtins.open', new_callable=mock_open, read_data=b'processed content')
     @patch('mainapp.utils.file_operations.FileReaderDecorator.read', return_value='processed content')
-    def test_file_upload_and_download(self, mock_read, mock_open_file, mock_tempfile, mock_remove, mock_path_join, mock_path_exists, mock_gettempdir):
+    @patch('mainapp.views.zipfile.is_zipfile', return_value=False)
+    def test_file_upload_and_download(self,mock_is_zipfile, mock_read, mock_open_file, mock_tempfile, mock_remove, mock_path_join, mock_path_exists, mock_gettempdir):
         mock_tempfile.return_value.__enter__.return_value.name = '/mock/tempfile'
         
         mock_file = mock.Mock()
