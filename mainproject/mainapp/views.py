@@ -16,6 +16,7 @@ import os
 
 class FileUploadView(View):
     template_name = 'file_upload.html'
+    rar_exe_path = r'C:\Program Files\WinRAR\Rar.exe'
 
     def get(self, request):
         form = FileUploadForm()
@@ -52,6 +53,7 @@ class FileUploadView(View):
                      file_type = extracted_file_path.split('.')[-1] 
                      tmp_file_path = extracted_file_path 
                 elif rarfile.is_rarfile(tmp_file_path): 
+                    rarfile.UNRAR_TOOL = r'C:\Program Files\WinRAR\UnRAR.exe'
                     extract_to = tempfile.mkdtemp() 
                     extracted_file_path = reader.extract_rar(tmp_file_path, extract_to) 
                     file_type = extracted_file_path.split('.')[-1] 
@@ -74,23 +76,25 @@ class FileUploadView(View):
                 
                 output_file_path = os.path.join(tempfile.gettempdir(), f"{output_file_name}.{file_type}")
                 decorated_reader.write(content, output_file_path) 
+                new_output_file_path = os.path.join(tempfile.gettempdir(), f"{output_file_name}.{file_type}") 
 
-                context = FileProcessorContext(None)
-                if action=="encrypt": 
-                    strategy = EncryptStrategy()
-                if action=="archive": 
-                    strategy = ZipArchiveStrategy()
-                if action=="rararchive": 
+                context = FileProcessorContext(None) 
+                if action == "encrypt": 
+                    strategy = EncryptStrategy() 
+                elif action == "archive": 
+                    strategy = ZipArchiveStrategy() 
+                    new_output_file_path = os.path.join(tempfile.gettempdir(), f"{output_file_name}.zip") 
+                elif action == "rararchive": 
                     rar_exe_path = r'C:\Program Files\WinRAR\Rar.exe'
-                    strategy = RarArchiveStrategy(rar_exe_path)
-                    output_file_path = os.path.join(tempfile.gettempdir(), f"{output_file_name}.rar")
-                else: 
-                    strategy = None 
-                if strategy:
-                    context.set_strategy(strategy)
-                    context.execute_strategy(tmp_file_path, output_file_path)
+                    strategy = RarArchiveStrategy(rar_exe_path) 
+                    new_output_file_path = os.path.join(tempfile.gettempdir(), f"{output_file_name}.rar") 
+                else: strategy = None 
+                
+                if strategy: 
+                    context.set_strategy(strategy) 
+                    context.execute_strategy(output_file_path, new_output_file_path)
                
-                with open(output_file_path, 'rb') as f: 
+                with open(new_output_file_path, 'rb') as f: 
                     response = HttpResponse(f.read(), content_type='application/octet-stream') 
                     if action=="archive":
                         filename = f"{output_file_name}.zip" 

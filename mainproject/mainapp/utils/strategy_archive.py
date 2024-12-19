@@ -1,7 +1,9 @@
 from abc import ABC, abstractmethod
 import zipfile
+
 import os
 import subprocess
+import tempfile
 from .encryption import encrypt_data, SIGNATURE
 
 class Strategy(ABC):
@@ -11,28 +13,29 @@ class Strategy(ABC):
 
 class ZipArchiveStrategy(Strategy):
     def execute(self, input_file_path, output_file_path):
-        with zipfile.ZipFile(output_file_path, 'w') as zipf:
-            zipf.write(input_file_path, arcname=os.path.basename(input_file_path))
+        with zipfile.ZipFile(output_file_path, 'w') as zipf: 
+            zipf.write(input_file_path, arcname=os.path.basename(input_file_path)) 
+            print(f"ZIP архив {output_file_path} создан.")
 
 class RarArchiveStrategy(Strategy):
-    def __init__(self, rar_exe_path):
+    def __init__(self,rar_exe_path):
         self.rar_exe_path = rar_exe_path
 
-    def execute(self, input_file_path, output_file_path):
-        
-
-        result = subprocess.run([self.rar_exe_path, 'a', output_file_path, input_file_path], check=True, capture_output=True)
-        if result.returncode != 0:
-            raise RuntimeError(f"Failed to create RAR archive: {result.stderr.decode()}")
+    def execute(self,input_file_path , output_file_path, ):
+       result = subprocess.run([self.rar_exe_path, 'a', output_file_path, input_file_path], check=True, capture_output=True) 
+       if result.returncode != 0: 
+        raise RuntimeError(f"Failed to create RAR archive: {result.stderr.decode()}") 
+       print(f"RAR архив {output_file_path} создан.")
 
 
 class EncryptStrategy(Strategy):
-    def execute(self, input_file_path, output_file_path):
-        with open(input_file_path, 'rb') as f:
-            file_data = f.read()
-        encrypted_data = SIGNATURE + encrypt_data(file_data)
+    def execute(self,input_file_path, output_file_path):
+      with open(input_file_path, 'rb') as f: 
+        file_data = f.read() 
+        encrypted_data = SIGNATURE + encrypt_data(file_data) 
         with open(output_file_path, 'wb') as f:
-            f.write(encrypted_data)
+             f.write(encrypted_data) 
+             print(f"Файл {output_file_path} зашифрован.")
 class FileProcessorContext:
     def __init__(self, strategy: Strategy):
         self._strategy = strategy
