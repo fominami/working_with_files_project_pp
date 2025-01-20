@@ -87,17 +87,6 @@ class DataProcessor:
                 return 2
             return 0
 
-        def apply_op(a, b, op):
-            if op == '+':
-                return a + b
-            elif op == '-':
-                return a - b
-            elif op == '*':
-                return a * b
-            elif op == '/':
-                if b == 0:
-                    raise ValueError("Деление на ноль.")
-                return a / b
 
         def greater_precedence(op1, op2):
             return precedence(op1) >= precedence(op2)

@@ -17,7 +17,7 @@ class FileReader(ABC):
         pass
 
 
-class TextFileReader:
+class TextFileReader(FileReader):
     def __init__(self, file_path, encoding='utf-8'):
         self.file_path = file_path
         self.encoding = encoding
@@ -36,7 +36,7 @@ class TextFileReader:
 
 
 
-class JSONFileReader:
+class JSONFileReader(FileReader):
     def __init__(self, file_path):
         self.file_path = file_path
 
@@ -45,14 +45,14 @@ class JSONFileReader:
             content = f.read()
             if not content:
                 raise ValueError("Файл пустой")
-            json_content = json.loads(content)
-        return json.dumps(json_content, indent=4)
+            json_content = json.loads(content)# формат json в обьект Python
+        return json.dumps(json_content, indent=4)# dвозвращает в json формат
     def write(self, content, output_file): 
         with open(output_file, 'w') as f: 
             json.dump(json.loads(content), f, indent=4)
 
 
-class YAMLFileReader:
+class YAMLFileReader(FileReader):
     def __init__(self, file_path):
         self.file_path = file_path
 
@@ -73,9 +73,9 @@ class XMLFileReader(FileReader):
         self.file_path = file_path
 
     def read(self):
-        tree = ET.parse(self.file_path)
-        root = tree.getroot()
-        return ET.tostring(root, encoding='unicode')
+        tree = ET.parse(self.file_path)#загружает и парсит XML файл
+        root = tree.getroot()#возвращает корневой элемент дерева
+        return ET.tostring(root, encoding='unicode')#дерево XML обратно в строку
     def write(self, content, output_file): 
         root = ET.ElementTree(ET.fromstring(content)) 
         root.write(output_file, encoding='unicode')

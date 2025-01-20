@@ -2,7 +2,6 @@ import unittest
 import os
 import zipfile
 import rarfile
-import subprocess
 import tempfile
 from mainapp.utils.strategy_archive import ZipArchiveStrategy, RarArchiveStrategy, EncryptStrategy, FileProcessorContext
 from mainapp.utils.file_operations import FileReaderDecorator
@@ -89,7 +88,7 @@ class TestArchiveOperations(unittest.TestCase):
                 content = f.read() 
             self.assertEqual(content, self.test_file_content)
 
-### Шаг 2: Создание тестов для шифрования и дешифровки
+#тесты для шифрования и дешифровки
 
     def test_encrypt(self):
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -135,5 +134,4 @@ class TestArchiveOperations(unittest.TestCase):
                 content = f.read()
             self.assertEqual(content, self.test_file_content)
 
-if __name__ == '__main__':
-    unittest.main()
+

@@ -1,6 +1,3 @@
-
-
-
 import subprocess
 from django.views import View
 from django.shortcuts import render
@@ -31,7 +28,7 @@ class FileUploadView(View):
             action = request.POST.get('action')
             output_file_path = None
             
-            with tempfile.NamedTemporaryFile(delete=False) as tmp_file:
+            with tempfile.NamedTemporaryFile(delete=False) as tmp_file:#создаем временный файл для работы 
                 for chunk in uploaded_file.chunks():
                     tmp_file.write(chunk)
                 tmp_file_path = tmp_file.name
@@ -39,7 +36,7 @@ class FileUploadView(View):
             try:
                 with open(tmp_file_path, 'rb') as f: 
                     file_data = f.read() 
-                if file_data.startswith(SIGNATURE): 
+                if file_data.startswith(SIGNATURE): #если файл зашифрован
                     encrypted_data = file_data[len(SIGNATURE):] 
                     decrypted_data = decrypt_data(encrypted_data)
                     with open(tmp_file_path, 'wb') as f: 
@@ -47,12 +44,12 @@ class FileUploadView(View):
                     print(f"Файл {tmp_file_path} расшифрован.")
                 reader = FileReaderDecorator(None) 
                 reader.set_file_path(tmp_file_path)
-                if zipfile.is_zipfile(tmp_file_path): 
-                     extract_to = tempfile.mkdtemp() 
+                if zipfile.is_zipfile(tmp_file_path): #если файл архивирован zip
+                     extract_to = tempfile.mkdtemp() #временная директория
                      extracted_file_path = reader.extract_zip(tmp_file_path, extract_to) 
                      file_type = extracted_file_path.split('.')[-1] 
                      tmp_file_path = extracted_file_path 
-                elif rarfile.is_rarfile(tmp_file_path): 
+                elif rarfile.is_rarfile(tmp_file_path): #если файл архивирован rar
                     rarfile.UNRAR_TOOL = r'C:\Program Files\WinRAR\UnRAR.exe'
                     extract_to = tempfile.mkdtemp() 
                     extracted_file_path = reader.extract_rar(tmp_file_path, extract_to) 
@@ -74,7 +71,7 @@ class FileUploadView(View):
                 decorated_reader = FileReaderDecorator(reader)
                 content = decorated_reader.read()
                 
-                output_file_path = os.path.join(tempfile.gettempdir(), f"{output_file_name}.{file_type}")
+                output_file_path = os.path.join(tempfile.gettempdir(), f"{output_file_name}.{file_type}") #путь к временному файлу и запись в него результатов
                 decorated_reader.write(content, output_file_path) 
                 new_output_file_path = os.path.join(tempfile.gettempdir(), f"{output_file_name}.{file_type}") 
 
@@ -95,17 +92,17 @@ class FileUploadView(View):
                     context.execute_strategy(output_file_path, new_output_file_path)
                
                 with open(new_output_file_path, 'rb') as f: 
-                    response = HttpResponse(f.read(), content_type='application/octet-stream') 
+                    response = HttpResponse(f.read(), content_type='application/octet-stream') #содержимое файла в виде потокового файла для скачивания 
                     if action=="archive":
                         filename = f"{output_file_name}.zip" 
                     elif action=="rararchive":
                         filename = f"{output_file_name}.rar" 
                     else:
                         filename =f"{output_file_name}.{file_type}"
-                    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+                    response['Content-Disposition'] = f'attachment; filename="{filename}"'#именно закгрузка, а не показ в браузере
                     return response
 
-            finally:
+            finally: #очищение ресурсов
                 os.remove(tmp_file_path)
                 if output_file_path and os.path.exists(output_file_path): 
                     os.remove(output_file_path)

@@ -16,12 +16,13 @@ class TestDataProcessing(SimpleTestCase):
 
         self.assertEqual(new_data,"hello")
     def test_processing_with_regex(self):
-        data='hello 5+(8-4)/2+5*2'
+        data='Calculate ((2+3)*(7-2))+(10/(5-(3*1)))-4'
         process = DataProcessor(data) 
 
         new_data=process.process_text_with_regex()
 
-        self.assertEqual(new_data,"hello 17")
+        self.assertEqual(new_data,"Calculate 26")
+        
     def test_processing_with_regex_without_numbers(self):
         data='hello'
         process = DataProcessor(data) 
